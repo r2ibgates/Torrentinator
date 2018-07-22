@@ -17,13 +17,13 @@ using Torrentinator.Library.Types;
 
 namespace Torrentinator.Library.Services
 {
-    public class TorrentService: IDisposable
+    public class TorrentService: IDisposable, ITorrentService
     {
         private string URL => "https://www.thepiratebay.org/rss/top100/207"; // Onion version "http://uj3wazyk5u4hnvtk.onion/rss/top100/207";
-        public string ControlIPAddress => "127.0.0.1";
-        public int SocksPortNumber => 9050;
-        public int ControlPortNumber => 9051;
-        public string ControlPassword => "Password1";
+        private string ControlIPAddress => "127.0.0.1";
+        private int SocksPortNumber => 9050;
+        private int ControlPortNumber => 9051;
+        private string ControlPassword => "Password1";
         private static HttpClient _HttpClient = new HttpClient();
 
         public void Dispose()
@@ -65,7 +65,7 @@ namespace Torrentinator.Library.Services
             _HttpClient = null;
         }
 
-        public async Task<IEnumerable<TorrentRSSItem>> GetTorrents()
+        public async Task<IEnumerable<TorrentRSSItem>> GetTorrentsFromRSS()
         {
             var links = new List<TorrentRSSItem>();
             var cookieContainer = new CookieContainer();

@@ -11,24 +11,28 @@ namespace Torrentinator.Controllers
 {
     public class TorrentsController : Controller
     {
+        private ITorrentService TorrentService;
+
+        public TorrentsController(ITorrentService torrentService)
+        {
+            this.TorrentService = torrentService;
+        }
+
         public async Task<IActionResult> Index()
         {
-            using (var t = new TorrentService())
-            {
-                var connect = await t.Connect();
+            var connect = await this.TorrentService.Connect();
 
-                if (connect.Success)
+            if (connect.Success)
+            {
+                var torrents = await this.TorrentService.GetTorrentsFromRSS();
+                return View(torrents);
+            }
+            else
+            {
+                return View("Error", new ErrorViewModel()
                 {
-                    var torrents = await t.GetTorrents();
-                    return View(torrents);
-                }
-                else
-                {
-                    return View("Error", new ErrorViewModel()
-                    {
-                        ErrorStack = connect.ErrorMessage
-                    });
-                }
+                    ErrorStack = connect.ErrorMessage
+                });
             }
         }
     }

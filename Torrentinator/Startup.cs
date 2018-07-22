@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Torrentinator.Library.Services;
 
 namespace Torrentinator
 {
@@ -22,6 +23,7 @@ namespace Torrentinator
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            services.AddTransient<ITorrentService, TorrentService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
