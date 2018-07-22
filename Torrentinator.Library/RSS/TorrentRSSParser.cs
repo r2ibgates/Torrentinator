@@ -6,9 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using Torrentinator.Models;
 
-namespace Torrentinator.RSS
+namespace Torrentinator.Library.RSS
 {
     public class TorrentRSSParser : ISyndicationFeedParser
     {
@@ -59,19 +58,9 @@ namespace Torrentinator.RSS
 
         public bool TryParseValue<T>(string value, out T result)
         {
-            if (typeof(T) == typeof(TorrentLink))
+            if (typeof(T) == typeof(TorrentRSSItem))
             {
-                var ser = new XmlSerializer(typeof(TorrentLink));
-                var ret = (TorrentLink)null;
-
-                using (var sr = new StringReader(value))
-                    ret = (TorrentLink)ser.Deserialize(sr);
-
-                if (ret != null)
-                {
-                    result = (T)Convert.ChangeType(ret, typeof(T));
-                    return true;
-                }
+                result = (T)Convert.ChangeType(ParseItem(value), typeof(T));
             }
 
             result = default(T);

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Torrentinator.Business;
 using Torrentinator.Models;
+using Torrentinator.Library.Services;
 
 namespace Torrentinator.Controllers
 {

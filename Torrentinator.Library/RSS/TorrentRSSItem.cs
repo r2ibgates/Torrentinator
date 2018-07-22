@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Torrentinator.Library.Types;
 
-namespace Torrentinator.RSS
+namespace Torrentinator.Library.RSS
 {
     public class TorrentRSSItem : ISyndicationItem
     {

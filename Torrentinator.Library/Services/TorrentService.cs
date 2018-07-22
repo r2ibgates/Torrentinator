@@ -12,10 +12,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
-using Torrentinator.Models;
-using Torrentinator.RSS;
+using Torrentinator.Library.RSS;
+using Torrentinator.Library.Types;
 
-namespace Torrentinator.Business
+namespace Torrentinator.Library.Services
 {
     public class TorrentService: IDisposable
     {
