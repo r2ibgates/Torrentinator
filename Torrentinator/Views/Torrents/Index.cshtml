@@ -19,10 +19,7 @@
                 @Html.DisplayNameFor(model => model.Published)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Length)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Magnet)
+                @Html.DisplayNameFor(model => model.DownloadProgress)
             </th>
             <th></th>
         </tr>
@@ -37,10 +34,7 @@
                 @Html.DisplayFor(modelItem => item.Published)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Length)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Magnet)
+                @Html.DisplayFor(modelItem => item.DownloadProgress)
             </td>
             <td>
                 @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |

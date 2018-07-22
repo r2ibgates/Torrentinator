@@ -1,0 +1,12 @@
+﻿@using Torrentinator.Extensions;
+@model Progress
+
+<div>
+    <div class="progress position-relative">
+        <div class="progress-bar" role="progressbar" style="width: @Model.PercentComplete%" aria-valuenow="@Model.PercentComplete" aria-valuemin="0" aria-valuemax="100"></div>
+        <small class="justify-content-center d-flex position-absolute w-100">@Model.PercentFormatted</small>
+    </div>
+    <div>
+        <span>@Model.Completed.ToFriendlyBytes() of @Model.Total.ToFriendlyBytes()</span>
+    </div>
+</div>

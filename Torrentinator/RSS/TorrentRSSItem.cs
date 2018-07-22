@@ -29,5 +29,6 @@ namespace Torrentinator.RSS
         public long Length { get; set; }
         public string Hash { get; set; }
         public string Magnet { get; set; }
+        public Progress DownloadProgress { get; } = new Progress();
     }
 }
