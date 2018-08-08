@@ -12,14 +12,17 @@ namespace Torrentinator.Controllers
     public class TorrentsController : Controller
     {
         private ITorrentService TorrentService;
+        private IDataService DataService;
 
-        public TorrentsController(ITorrentService torrentService)
+        public TorrentsController(ITorrentService torrentService, IDataService dataService)
         {
             this.TorrentService = torrentService;
+            this.DataService = dataService;
         }
 
         public async Task<IActionResult> Index()
         {
+            /*
             var connect = await this.TorrentService.Connect();
 
             if (connect.Success)
@@ -34,6 +37,11 @@ namespace Torrentinator.Controllers
                     ErrorStack = connect.ErrorMessage
                 });
             }
+            */
+            await this.DataService.RefreshTorrents();
+
+            var torrents = (await this.DataService.GetTorrents()).Select(TorrentViewModel.Create);
+            return View(torrents);
         }
     }
 }

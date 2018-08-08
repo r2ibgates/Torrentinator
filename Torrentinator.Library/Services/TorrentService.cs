@@ -110,8 +110,6 @@ namespace Torrentinator.Library.Services
                                     if (feedReader.ElementType == SyndicationElementType.Item)
                                     {
                                         var item = (TorrentRSSItem)await feedReader.ReadItem();
-                                        item.DownloadProgress.Total = item.Length;
-                                        item.DownloadProgress.Completed = (long)((new Random()).NextDouble() * item.Length);
                                         links.Add(item);
                                     }
                                 }

@@ -23,7 +23,11 @@ namespace Torrentinator
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            var c = new DataService.DataServiceOptions();
+            Configuration.GetSection("DataService").Bind(c);
+
             services.AddTransient<ITorrentService, TorrentService>();
+            services.AddSingleton<IDataService>(p => new DataService(c));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

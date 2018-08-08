@@ -25,11 +25,9 @@ namespace Torrentinator.Library.RSS
         public DateTimeOffset LastUpdated { get; set; }
 
         public DateTimeOffset Published { get; set; }
-
-        [UIHint("BytesFormat")]
+        
         public long Length { get; set; }
         public string Hash { get; set; }
         public string Magnet { get; set; }
-        public Progress DownloadProgress { get; } = new Progress();
     }
 }

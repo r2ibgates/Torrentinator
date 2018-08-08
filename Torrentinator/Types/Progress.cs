@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Torrentinator.Library.Types
+namespace Torrentinator.Types
 {
     public class Progress
     {
