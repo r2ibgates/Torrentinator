@@ -9,7 +9,8 @@
 <form asp-controller="Torrents" method="post">
     <div class="btn-group" role="group" aria-label="Toolbar">
         <ul>
-            <li><button asp-action="RefreshIndex" class="btn-primary" type="submit">Refresh Index</button></li>
+            <li><button asp-action="DeleteEverything" class="btn-primary">Delete All The Things</button></li>
+            <li><button asp-action="RefreshIndex" class="btn-primary">Refresh Index</button></li>
         </ul>
     </div>
     <table class="table">
@@ -32,6 +33,9 @@
             {
                 <tr>
                     <td>
+                        <a href="#" onclick="return toggle('@item.TorrentId');">Description</a>
+                    </td>
+                    <td>
                         @Html.DisplayFor(modelItem => item.Title)
                     </td>
                     <td>
@@ -43,10 +47,23 @@
                     <td>
                         @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
                         @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                        <button asp-action="Delete" asp-route-id="@item.Id">Delete</button>
+                        <button asp-action="Delete" asp-route-id="@item.TorrentId">Delete</button>
+                    </td>
+                </tr>
+                <tr data-description="@item.TorrentId" style="display: none;">                    
+                    <td colspan="5" style="padding: 8px; border-top: none;">
+                        <pre>@Html.Raw(item.Description)</pre>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 </form>
+
+<script type="text/javascript">
+    function toggle(id) {
+        $('tr[data-description="' + id + '"]').toggle();
+        return false;
+
+    }
+</script>

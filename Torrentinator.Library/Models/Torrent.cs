@@ -5,8 +5,8 @@ using System.Text;
 namespace Torrentinator.Library.Models
 {
     public class Torrent
-    {
-        public string Id { get; set; }
+    {        
+        public string TorrentId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public string Url { get; set; }

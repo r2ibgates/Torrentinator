@@ -10,6 +10,7 @@ namespace Torrentinator.Library.Repositories
     {
         Task ImportTorrents();
         Task DeleteTorrent(string id);
+        Task DeleteAllTorrents();
         Task<IEnumerable<Torrent>> GetTorrents();
     }
 }

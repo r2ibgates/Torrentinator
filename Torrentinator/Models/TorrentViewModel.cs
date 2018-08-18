@@ -18,7 +18,7 @@ namespace Torrentinator.Models
         {
             return new TorrentViewModel()
             {
-                Id = torrent.Id,
+                TorrentId = torrent.TorrentId,
                 Title = torrent.Title,
                 Description = torrent.Description,
                 Length = torrent.Length,

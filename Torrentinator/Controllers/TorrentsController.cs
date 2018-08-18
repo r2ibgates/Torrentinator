@@ -31,6 +31,12 @@ namespace Torrentinator.Controllers
             await this.TorrentRepository.ImportTorrents();
             return Redirect("/Torrents");
         }
+        [HttpPost]
+        public async Task<IActionResult> DeleteEverything()
+        {
+            await this.TorrentRepository.DeleteAllTorrents();
+            return Redirect("/Torrents");
+        }
 
         [HttpPost]
         public async Task<IActionResult> Delete(string id)

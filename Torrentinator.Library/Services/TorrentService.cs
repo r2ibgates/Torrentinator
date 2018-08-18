@@ -14,6 +14,8 @@ using System.Xml;
 using System.Xml.Serialization;
 using Torrentinator.Library.RSS;
 using Torrentinator.Library.Types;
+using HtmlAgilityPack;
+using Fizzler.Systems.HtmlAgilityPack;
 
 namespace Torrentinator.Library.Services
 {
@@ -87,61 +89,111 @@ namespace Torrentinator.Library.Services
             _HttpClient = null;
         }
 
-        public async Task<IEnumerable<TorrentRSSItem>> GetTorrentsFromRSS()
+        private CookieContainer cookieContainer = null;
+
+        private HttpWebResponse GetResponse(string url)
         {
-            var links = new List<TorrentRSSItem>();
-            var cookieContainer = new CookieContainer();
+            var success = false;
 
-            var requestHome = (HttpWebRequest)WebRequest.Create("https://www.thepiratebay.org/");
-            requestHome.CookieContainer = cookieContainer;
-            requestHome.Headers.Add(HttpRequestHeader.Accept, Options.Browser.Accept);
-            requestHome.Headers.Add(HttpRequestHeader.AcceptEncoding, Options.Browser.AcceptEncoding);
-            requestHome.Headers.Add(HttpRequestHeader.UserAgent, Options.Browser.UserAgent);
-            requestHome.Headers.Add(HttpRequestHeader.AcceptCharset, Options.Browser.AcceptCharset);
+            if (cookieContainer == null)
+            {
+                cookieContainer = new CookieContainer();
+                var requestHome = (HttpWebRequest)WebRequest.Create("https://www.thepiratebay.org/");
 
-            var responseHome = (HttpWebResponse)requestHome.GetResponse();
-            var success = (responseHome.StatusCode == HttpStatusCode.OK);
+                requestHome.CookieContainer = cookieContainer;
+                requestHome.Headers.Add(HttpRequestHeader.Accept, Options.Browser.Accept);
+                requestHome.Headers.Add(HttpRequestHeader.AcceptEncoding, Options.Browser.AcceptEncoding);
+                requestHome.Headers.Add(HttpRequestHeader.UserAgent, Options.Browser.UserAgent);
+                requestHome.Headers.Add(HttpRequestHeader.AcceptCharset, Options.Browser.AcceptCharset);
 
-            responseHome.Close();
+                var responseHome = (HttpWebResponse)requestHome.GetResponse();
+                success = (responseHome.StatusCode == HttpStatusCode.OK);
+
+                responseHome.Close();
+            }
+            else
+            {
+                success = true;
+            }
+
             if (success)
             {
                 // now that we have cookies, change the request and get the stupid feed
-                var request = (HttpWebRequest)WebRequest.Create(this.URL);
+                var request = (HttpWebRequest)WebRequest.Create(url);
                 request.CookieContainer = cookieContainer;
                 request.Headers.Add(HttpRequestHeader.Accept, Options.Browser.Accept);
                 request.Headers.Add(HttpRequestHeader.AcceptEncoding, Options.Browser.AcceptEncoding);
                 request.Headers.Add(HttpRequestHeader.UserAgent, Options.Browser.UserAgent);
                 request.Headers.Add(HttpRequestHeader.AcceptCharset, Options.Browser.AcceptCharset);
 
-                using (var response = (HttpWebResponse)request.GetResponse())
+                return (HttpWebResponse)request.GetResponse();
+            }
+            return null;
+        }
+        private async Task<string> GetWebPage(string url)
+        {
+            var response = GetResponse(url);
+            var ret = string.Empty;
+
+            if ((response != null) && (response.StatusCode == HttpStatusCode.OK))
+            {
+                using (var decompressedStream = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress))
+                using (var sr = new StreamReader(decompressedStream, Encoding.UTF8))                
+                    ret = await sr.ReadToEndAsync();                
+
+                response.Close();
+            }
+
+            return ret;
+        }
+
+        public async Task<IEnumerable<TorrentRSSItem>> GetTorrentsFromRSS()
+        {
+            var links = new List<TorrentRSSItem>();
+            var content = await GetWebPage(this.URL);
+
+            if (!string.IsNullOrEmpty(content))
+            {
+                using (var stringReader = new StringReader(content))
+                using (var xmlReader = XmlReader.Create(stringReader, new XmlReaderSettings() { Async = true, DtdProcessing = DtdProcessing.Parse }))
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    var feedReader = new RssFeedReader(xmlReader, new TorrentRSSParser());
+
+                    while (await feedReader.Read())
                     {
-                        using (var decompressedStream = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress))
-                        using (var sr = new StreamReader(decompressedStream, Encoding.UTF8))
+                        if (feedReader.ElementType == SyndicationElementType.Item)
                         {
-                            var content = await sr.ReadToEndAsync();
-
-                            using (var stringReader = new StringReader(content))
-                            using (var xmlReader = XmlReader.Create(stringReader, new XmlReaderSettings() { Async = true, DtdProcessing = DtdProcessing.Parse }))
-                            {
-                                var feedReader = new RssFeedReader(xmlReader, new TorrentRSSParser());
-
-                                while (await feedReader.Read())
-                                {
-                                    if (feedReader.ElementType == SyndicationElementType.Item)
-                                    {
-                                        var item = (TorrentRSSItem)await feedReader.ReadItem();
-                                        links.Add(item);
-                                    }
-                                }
-                            }
+                            var item = (TorrentRSSItem)await feedReader.ReadItem();
+                            links.Add(item);
                         }
                     }
                 }
             }
 
             return links;
+        }
+
+        public async Task<string> GetDescription(string torrentId)
+        {
+            var content = await GetWebPage(torrentId);
+            var ret = (string)null;
+
+            if (!string.IsNullOrEmpty(content))
+            {
+                var doc = new HtmlDocument();
+                doc.LoadHtml(content);
+                var divElt = doc.DocumentNode.QuerySelector("div.nfo");
+
+                if (divElt != null)
+                {
+                    var pre = divElt.Children().Where(n => n.Name == "pre").FirstOrDefault();
+                    if (pre != null)
+                        return pre.InnerHtml;
+                    return divElt.InnerHtml;
+                }
+            }
+
+            return ret;
         }
     }
 }

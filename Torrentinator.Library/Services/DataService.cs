@@ -17,73 +17,56 @@ namespace Torrentinator.Library.Services
             public string ConnectionString { get; set; }
         }
         private DataServiceOptions Config { get; }
-        IMongoCollection<Torrent> collection;
+        IMongoCollection<TorrentData> collection;
 
         public DataService(DataServiceOptions options)
         {
             this.Config = options;
-            var client = new MongoClient();
+            var client = new MongoClient(this.Config.ConnectionString);            
             var db = client.GetDatabase("torrentinator");
-            collection = db.GetCollection<Torrent>("torrents");
+            collection = db.GetCollection<TorrentData>("torrents");
         }
 
         public async Task<IEnumerable<Torrent>> GetTorrents()
         {
-            /*
-            var ret = new List<Torrent>()
-            {
-                new Torrent()
-                {
-                    Id = "test-1",
-                    Title = this.Config.ConnectionString,
-                    Description = "This is only a test... duh",
-                    Length = 492020,
-                    Published = new DateTimeOffset(2018, 03, 15, 12, 4,6,TimeSpan.FromHours(0)),
-                    Url = "https://www.google.com"
-                }
-            };
-
-            return await Task.FromResult<IEnumerable<Torrent>>(ret);
-            */
             var filter = new BsonDocument();
 
             return await collection.Find(filter).ToListAsync();
         }
 
-        public async Task RefreshTorrents()
-        {            
-            var found = await collection.FindAsync(f => f.Id == "test-123");
-            if (!found.Any())
+        public async Task AddTorrent(Torrent torrent)
+        {
+            var found = collection.Find(f => f.TorrentId == torrent.TorrentId).Limit(1).Any();
+            if (!found)
             {
-                await collection.InsertOneAsync(new Torrent()
-                {
-                    Id = "test-123",
-                    Title = "From the DB",
-                    Description = "yup, just a dumb test",
-                    Length = 492020,
-                    Published = new DateTimeOffset(2018, 03, 15, 12, 4, 6, TimeSpan.FromHours(0)),
-                    Url = "https://www.google.com"
-                });
+                var td = new TorrentData(torrent);
+                await collection.InsertOneAsync(td);
             }
         }
 
-        public async Task AddTorrent(Torrent torrent)
+        public async Task<IEnumerable<Torrent>> GetTorrentsToAdd(IEnumerable<Torrent> torrents)
         {
-            var found = collection.Find(f => f.Id == torrent.Id).Limit(1).Any();
-            if (!found)            
-                await collection.InsertOneAsync(torrent);            
+            return await Task.Run(() => torrents.Where(t => !collection.Find(f => f.TorrentId == t.TorrentId).Limit(1).Any()));
         }
 
         public async Task AddTorrents(IEnumerable<Torrent> torrents)
         {
-            var newTorrents = torrents.Where(t => !collection.Find(f => f.Id == t.Id).Limit(1).Any());
+            var newTorrents = torrents.Where(t => !collection.Find(f => f.TorrentId == t.TorrentId).Limit(1).Any());
             if (newTorrents.Any())
-                await collection.InsertManyAsync(newTorrents);
+            {
+                var newTDs = newTorrents.Select(t => new TorrentData(t));
+                await collection.InsertManyAsync(newTDs);
+            }
         }
 
         public async Task DeleteTorrent(string id)
         {
-            await collection.DeleteOneAsync(t => t.Id == id);
+            await collection.DeleteOneAsync(t => t.TorrentId == id);
+        }
+        public async Task<long> DeleteAllTorrents()
+        {
+            var result = await collection.DeleteManyAsync(new BsonDocument());
+            return result.DeletedCount;
         }
     }
 }

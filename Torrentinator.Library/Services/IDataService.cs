@@ -9,9 +9,10 @@ namespace Torrentinator.Library.Services
     public interface IDataService
     {
         Task<IEnumerable<Torrent>> GetTorrents();
-        Task RefreshTorrents();
         Task AddTorrent(Torrent torrent);
         Task AddTorrents(IEnumerable<Torrent> torrents);
+        Task<IEnumerable<Torrent>> GetTorrentsToAdd(IEnumerable<Torrent> torrents);
         Task DeleteTorrent(string id);
+        Task<long> DeleteAllTorrents();
     }
 }

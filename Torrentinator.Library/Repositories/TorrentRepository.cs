@@ -22,20 +22,32 @@ namespace Torrentinator.Library.Repositories
         public async Task ImportTorrents()
         {
             var torrents = await TorrentService.GetTorrentsFromRSS();
-            await DataService.AddTorrents(torrents.Select(t => new Torrent()
+            var newTorrents = await DataService.GetTorrentsToAdd(torrents.Select(t => new Torrent()
             {
-                Id = t.Id,
+                TorrentId = t.Id,
                 Title = t.Title,
                 Description = t.Description,
                 Length = t.Length,
                 Published = t.Published,
                 Url = t.Magnet
             }));
+            var tds = new List<Torrent>();
+
+            foreach(var t in newTorrents.Take(10))
+            {
+                t.Description = await TorrentService.GetDescription(t.TorrentId) ?? t.Description;
+                tds.Add(t);
+            }
+            await DataService.AddTorrents(tds);
         }
 
         public async Task DeleteTorrent(string id)
         {
             await DataService.DeleteTorrent(id);
+        }
+        public async Task DeleteAllTorrents()
+        {
+            await DataService.DeleteAllTorrents();
         }
 
         public async Task<IEnumerable<Torrent>> GetTorrents()
