@@ -17,14 +17,36 @@ using Torrentinator.Library.Types;
 
 namespace Torrentinator.Library.Services
 {
-    public class TorrentService: IDisposable, ITorrentService
+    internal class TorrentService: IDisposable, ITorrentService
     {
+        public class TorrentServiceOptions
+        {
+            public TorProxyOptions TorProxy { get; set; } = new TorProxyOptions();
+            public BrowserOptions Browser { get; set; } = new BrowserOptions();
+        }
+        public class TorProxyOptions
+        {
+            public string Address { get; set; }
+            public int SocksPort { get; set; }
+            public int ControlPort { get; set; }
+            public string ControlPassword { get; set; }
+        }
+        public class BrowserOptions
+        {
+            public string Accept { get; set; }
+            public string AcceptEncoding { get; set; }
+            public string AcceptCharset { get; set; }
+            public string UserAgent { get; set; }
+        }
+
         private string URL => "https://www.thepiratebay.org/rss/top100/207"; // Onion version "http://uj3wazyk5u4hnvtk.onion/rss/top100/207";
-        private string ControlIPAddress => "127.0.0.1";
-        private int SocksPortNumber => 9050;
-        private int ControlPortNumber => 9051;
-        private string ControlPassword => "Password1";
         private static HttpClient _HttpClient = new HttpClient();
+        private TorrentServiceOptions Options { get; }
+
+        public TorrentService(TorrentServiceOptions options)
+        {
+            this.Options = options;
+        }
 
         public void Dispose()
         {
@@ -36,13 +58,13 @@ namespace Torrentinator.Library.Services
             var requestUri = "http://icanhazip.com/";
             try
             {
-                _HttpClient = new HttpClient(new SocksPortHandler(ControlIPAddress, socksPort: SocksPortNumber));
+                _HttpClient = new HttpClient(new SocksPortHandler(Options.TorProxy.Address, socksPort: Options.TorProxy.SocksPort));
                 var message = await _HttpClient.GetAsync(requestUri);
                 var content = await message.Content.ReadAsStringAsync();
                 Console.WriteLine($"Your Tor IP: \t\t{content}");
 
                 // 3. Change Tor IP
-                var controlPortClient = new DotNetTor.ControlPort.Client(ControlIPAddress, controlPort: ControlPortNumber, password: ControlPassword);
+                var controlPortClient = new DotNetTor.ControlPort.Client(Options.TorProxy.Address, controlPort: Options.TorProxy.ControlPort, password: Options.TorProxy.ControlPassword);
                 await controlPortClient.ChangeCircuitAsync();
 
                 // 4. Get changed Tor IP
@@ -72,10 +94,10 @@ namespace Torrentinator.Library.Services
 
             var requestHome = (HttpWebRequest)WebRequest.Create("https://www.thepiratebay.org/");
             requestHome.CookieContainer = cookieContainer;
-            requestHome.Headers.Add(HttpRequestHeader.Accept, "text/html,application/xhtml+xml,application/xml");
-            requestHome.Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip, deflate");
-            requestHome.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) Gecko/20100101 Firefox/19.0");
-            requestHome.Headers.Add(HttpRequestHeader.AcceptCharset, "ISO-8859-1");
+            requestHome.Headers.Add(HttpRequestHeader.Accept, Options.Browser.Accept);
+            requestHome.Headers.Add(HttpRequestHeader.AcceptEncoding, Options.Browser.AcceptEncoding);
+            requestHome.Headers.Add(HttpRequestHeader.UserAgent, Options.Browser.UserAgent);
+            requestHome.Headers.Add(HttpRequestHeader.AcceptCharset, Options.Browser.AcceptCharset);
 
             var responseHome = (HttpWebResponse)requestHome.GetResponse();
             var success = (responseHome.StatusCode == HttpStatusCode.OK);
@@ -86,10 +108,10 @@ namespace Torrentinator.Library.Services
                 // now that we have cookies, change the request and get the stupid feed
                 var request = (HttpWebRequest)WebRequest.Create(this.URL);
                 request.CookieContainer = cookieContainer;
-                request.Headers.Add(HttpRequestHeader.Accept, "text/html,application/xhtml+xml,application/xml");
-                request.Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip, deflate");
-                request.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) Gecko/20100101 Firefox/19.0");
-                request.Headers.Add(HttpRequestHeader.AcceptCharset, "ISO-8859-1");
+                request.Headers.Add(HttpRequestHeader.Accept, Options.Browser.Accept);
+                request.Headers.Add(HttpRequestHeader.AcceptEncoding, Options.Browser.AcceptEncoding);
+                request.Headers.Add(HttpRequestHeader.UserAgent, Options.Browser.UserAgent);
+                request.Headers.Add(HttpRequestHeader.AcceptCharset, Options.Browser.AcceptCharset);
 
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {

@@ -10,7 +10,7 @@ using Torrentinator.Library.Models;
 
 namespace Torrentinator.Library.Services
 {
-    public class DataService : IDataService
+    internal class DataService : IDataService
     {
         public class DataServiceOptions
         {
@@ -51,7 +51,7 @@ namespace Torrentinator.Library.Services
         }
 
         public async Task RefreshTorrents()
-        {
+        {            
             var found = await collection.FindAsync(f => f.Id == "test-123");
             if (!found.Any())
             {
@@ -65,6 +65,25 @@ namespace Torrentinator.Library.Services
                     Url = "https://www.google.com"
                 });
             }
+        }
+
+        public async Task AddTorrent(Torrent torrent)
+        {
+            var found = collection.Find(f => f.Id == torrent.Id).Limit(1).Any();
+            if (!found)            
+                await collection.InsertOneAsync(torrent);            
+        }
+
+        public async Task AddTorrents(IEnumerable<Torrent> torrents)
+        {
+            var newTorrents = torrents.Where(t => !collection.Find(f => f.Id == t.Id).Limit(1).Any());
+            if (newTorrents.Any())
+                await collection.InsertManyAsync(newTorrents);
+        }
+
+        public async Task DeleteTorrent(string id)
+        {
+            await collection.DeleteOneAsync(t => t.Id == id);
         }
     }
 }

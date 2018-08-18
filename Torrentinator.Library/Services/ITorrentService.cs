@@ -12,6 +12,5 @@ namespace Torrentinator.Library.Services
         void Disconnect();
         Task<TorConnectResult> Connect();
         Task<IEnumerable<TorrentRSSItem>> GetTorrentsFromRSS();
-
     }
 }

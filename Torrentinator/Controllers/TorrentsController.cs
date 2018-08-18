@@ -6,42 +6,37 @@ using Microsoft.AspNetCore.Mvc;
 using Torrentinator.Business;
 using Torrentinator.Models;
 using Torrentinator.Library.Services;
+using Torrentinator.Library.Repositories;
 
 namespace Torrentinator.Controllers
 {
     public class TorrentsController : Controller
     {
-        private ITorrentService TorrentService;
-        private IDataService DataService;
+        private ITorrentRepository TorrentRepository;
 
-        public TorrentsController(ITorrentService torrentService, IDataService dataService)
+        public TorrentsController(ITorrentRepository torrentRepository)
         {
-            this.TorrentService = torrentService;
-            this.DataService = dataService;
+            this.TorrentRepository = torrentRepository;
         }
 
         public async Task<IActionResult> Index()
         {
-            /*
-            var connect = await this.TorrentService.Connect();
-
-            if (connect.Success)
-            {
-                var torrents = await this.TorrentService.GetTorrentsFromRSS();
-                return View(torrents);
-            }
-            else
-            {
-                return View("Error", new ErrorViewModel()
-                {
-                    ErrorStack = connect.ErrorMessage
-                });
-            }
-            */
-            await this.DataService.RefreshTorrents();
-
-            var torrents = (await this.DataService.GetTorrents()).Select(TorrentViewModel.Create);
+            var torrents = (await this.TorrentRepository.GetTorrents()).Select(TorrentViewModel.Create);
             return View(torrents);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RefreshIndex()
+        {
+            await this.TorrentRepository.ImportTorrents();
+            return Redirect("/Torrents");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(string id)
+        {
+            await this.TorrentRepository.DeleteTorrent(id);
+            return Redirect("/Torrents");
         }
     }
 }

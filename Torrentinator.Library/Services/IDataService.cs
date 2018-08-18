@@ -10,5 +10,8 @@ namespace Torrentinator.Library.Services
     {
         Task<IEnumerable<Torrent>> GetTorrents();
         Task RefreshTorrents();
+        Task AddTorrent(Torrent torrent);
+        Task AddTorrents(IEnumerable<Torrent> torrents);
+        Task DeleteTorrent(string id);
     }
 }
