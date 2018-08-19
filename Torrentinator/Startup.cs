@@ -45,6 +45,10 @@ namespace Torrentinator
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
+                    name: "withStatus",
+                    template: "{controller}/{action}/{id}/{status}");
+
+                routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });

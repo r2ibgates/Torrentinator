@@ -1,9 +1,18 @@
-﻿@model IEnumerable<Torrentinator.Models.TorrentViewModel>
+﻿@using Torrentinator.Library.Models
+@model IEnumerable<Torrentinator.Models.TorrentViewModel>
 
 @{
     ViewData["Title"] = "Torrents - Top 100 HD Movies";
 }
 
+<style type="text/css">
+    tr.disabled-torrent {
+        display: none;
+    }
+    td:nth-child(4) {
+        text-align: right;
+    }
+</style>
 <h2>Torrents</h2>
 
 <form asp-controller="Torrents" method="post">
@@ -16,14 +25,12 @@
     <table class="table">
         <thead>
             <tr>
+                <th></th>
                 <th>
                     @Html.DisplayNameFor(model => model.Title)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Published)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.DownloadProgress)
                 </th>
                 <th></th>
             </tr>
@@ -31,7 +38,7 @@
         <tbody>
             @foreach (var item in Model)
             {
-                <tr>
+                <tr class="@(item.Status == TorrentStatus.Disabled ? "disabled-torrent" : "")">
                     <td>
                         <a href="#" onclick="return toggle('@item.TorrentId');">Description</a>
                     </td>
@@ -42,16 +49,18 @@
                         @Html.DisplayFor(modelItem => item.Published)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.DownloadProgress)
-                    </td>
-                    <td>
                         @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
                         @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                        <button asp-action="Delete" asp-route-id="@item.TorrentId">Delete</button>
+                        <button asp-action="Disable" type="submit" asp-route-id="@item.TorrentId" asp-route-status="@(item.Status == TorrentStatus.Ready ? TorrentStatus.Disabled : TorrentStatus.Ready)">@(item.Status == TorrentStatus.Disabled ? "Enable" : "Disable")</button>
+                    </td>
+                </tr>
+                <tr class="@(item.Status == TorrentStatus.Disabled ? "disabled-torrent" : "")">
+                    <td colspan="4" style="padding: 0 50px; border-top: none;">
+                        @Html.DisplayFor(modelItem => item.DownloadProgress)
                     </td>
                 </tr>
                 <tr data-description="@item.TorrentId" style="display: none;">                    
-                    <td colspan="5" style="padding: 8px; border-top: none;">
+                    <td colspan="4" style="padding: 8px; border-top: none;">
                         <pre>@Html.Raw(item.Description)</pre>
                     </td>
                 </tr>

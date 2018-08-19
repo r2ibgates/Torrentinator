@@ -12,5 +12,7 @@ namespace Torrentinator.Library.Repositories
         Task DeleteTorrent(string id);
         Task DeleteAllTorrents();
         Task<IEnumerable<Torrent>> GetTorrents();
+        Task<Torrent> SetStatus(string id, TorrentStatus status);
+        Task<Torrent> SetDownloadProgress(string id, long progress);
     }
 }

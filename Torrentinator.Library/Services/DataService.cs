@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Torrentinator.Library.Models;
+using Torrentinator.Library.Infrastructure;
+using System.Linq.Expressions;
 
 namespace Torrentinator.Library.Services
 {
@@ -27,11 +29,25 @@ namespace Torrentinator.Library.Services
             collection = db.GetCollection<TorrentData>("torrents");
         }
 
-        public async Task<IEnumerable<Torrent>> GetTorrents()
+        public async Task<IEnumerable<Torrent>> GetTorrents(Expression<Func<Torrent, bool>> filter)
         {
-            var filter = new BsonDocument();
-
-            return await collection.Find(filter).ToListAsync();
+            if (filter != null)
+            {
+                var whereString = MongoWhereBuilder.ToMongoSql(filter);
+               
+                return await collection.Find(whereString).ToListAsync();
+            }
+            else
+                return await collection.Find(new BsonDocument()).ToListAsync();
+        }
+        public async Task<Torrent> GetTorrent(string id)
+        {
+            var options = new FindOptions<TorrentData>
+            {
+                Limit = 1,                
+                NoCursorTimeout = false
+            };
+            return await collection.FindAsync(t => t.TorrentId == id, options).Result.FirstOrDefaultAsync();
         }
 
         public async Task AddTorrent(Torrent torrent)
@@ -58,15 +74,22 @@ namespace Torrentinator.Library.Services
                 await collection.InsertManyAsync(newTDs);
             }
         }
-
-        public async Task DeleteTorrent(string id)
+        
+        public async Task<long> DeleteTorrents(Expression<Func<Torrent, bool>> filter)
         {
-            await collection.DeleteOneAsync(t => t.TorrentId == id);
-        }
-        public async Task<long> DeleteAllTorrents()
-        {
-            var result = await collection.DeleteManyAsync(new BsonDocument());
+            var result = await collection.DeleteManyAsync(MongoWhereBuilder.ToMongoSql(filter));
             return result.DeletedCount;
+        }
+
+        public async Task<Torrent> UpdateTorrent(Torrent torrent)
+        {
+            var result = await collection.ReplaceOneAsync(
+                   Builders<TorrentData>.Filter.Eq(t => t.TorrentId, torrent.TorrentId),
+                   new TorrentData(torrent), new UpdateOptions() { IsUpsert = true });
+            if (result.IsAcknowledged)
+                return torrent;
+            else
+                return null;
         }
     }
 }

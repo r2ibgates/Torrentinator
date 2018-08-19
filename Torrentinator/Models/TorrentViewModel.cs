@@ -16,15 +16,19 @@ namespace Torrentinator.Models
 
         internal static TorrentViewModel Create(Torrent torrent)
         {
-            return new TorrentViewModel()
+            var tvm = new TorrentViewModel()
             {
                 TorrentId = torrent.TorrentId,
                 Title = torrent.Title,
                 Description = torrent.Description,
                 Length = torrent.Length,
                 Published = torrent.Published,
-                Url = torrent.Url
+                Url = torrent.Url,
+                Status = torrent.Status,
+                Downloaded = torrent.Downloaded
             };
+            tvm.DownloadProgress.Completed = tvm.Downloaded;
+            return tvm;
         }
     }
 }

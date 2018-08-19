@@ -12,5 +12,7 @@ namespace Torrentinator.Library.Models
         public string Url { get; set; }
         public DateTimeOffset Published { get; set; }
         public long Length { get; set; }
+        public TorrentStatus Status { get; set; }
+        public long Downloaded { get; set; }
     }
 }

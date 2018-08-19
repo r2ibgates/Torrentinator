@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Torrentinator.Library", "To
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Torrentinator.Service", "Torrentinator.Service\Torrentinator.Service.csproj", "{8D114C8C-ABEA-4C37-AC5B-3984E54E0226}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Torrentinator.Library.Tests", "Torrentinator.Library.Tests\Torrentinator.Library.Tests.csproj", "{0A842B76-110B-4264-B34D-08F5A7F167F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{8D114C8C-ABEA-4C37-AC5B-3984E54E0226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D114C8C-ABEA-4C37-AC5B-3984E54E0226}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D114C8C-ABEA-4C37-AC5B-3984E54E0226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A842B76-110B-4264-B34D-08F5A7F167F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A842B76-110B-4264-B34D-08F5A7F167F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A842B76-110B-4264-B34D-08F5A7F167F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A842B76-110B-4264-B34D-08F5A7F167F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

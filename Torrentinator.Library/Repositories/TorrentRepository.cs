@@ -43,16 +43,37 @@ namespace Torrentinator.Library.Repositories
 
         public async Task DeleteTorrent(string id)
         {
-            await DataService.DeleteTorrent(id);
+            await DataService.DeleteTorrents(t => t.TorrentId == id);
         }
         public async Task DeleteAllTorrents()
         {
-            await DataService.DeleteAllTorrents();
+            await DataService.DeleteTorrents(null);
         }
 
         public async Task<IEnumerable<Torrent>> GetTorrents()
         {
-            return await DataService.GetTorrents();
+            return await DataService.GetTorrents(null);
+        }
+
+        public async Task<Torrent> SetStatus(string id, TorrentStatus status)
+        {
+            var torrent = await DataService.GetTorrent(id);
+            torrent.Status = status;
+            await DataService.UpdateTorrent(torrent);
+            return torrent;
+        }
+
+        public async Task<Torrent> SetDownloadProgress(string id, long progress)
+        {
+            var torrent = await DataService.GetTorrent(id);
+            torrent.Downloaded = progress;
+            if (torrent.Downloaded > 0)
+                torrent.Status = TorrentStatus.Downloading;
+            else if (torrent.Downloaded == torrent.Length)
+                torrent.Status = TorrentStatus.Complete;
+            else
+                torrent.Status = TorrentStatus.Ready;
+            return torrent;
         }
     }
 }

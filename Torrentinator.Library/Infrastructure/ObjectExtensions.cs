@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.ArrayExtensions;
@@ -89,6 +90,7 @@ namespace System
             {
                 if (filter != null && filter(fieldInfo) == false) continue;
                 if ((!AllowPrimitives) && (IsPrimitive(fieldInfo.FieldType))) continue;
+                // if (!cloneObject.GetType().GetFields(bindingFlags).Any(f => f.Name == fieldInfo.Name)) continue;
                 var originalFieldValue = fieldInfo.GetValue(originalObject);
                 var clonedFieldValue = InternalCopy(originalFieldValue, visited);
                 fieldInfo.SetValue(cloneObject, clonedFieldValue);
