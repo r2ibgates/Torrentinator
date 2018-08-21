@@ -45,9 +45,25 @@ namespace Torrentinator.Library.Services
         private static HttpClient _HttpClient = new HttpClient();
         private TorrentServiceOptions Options { get; }
 
+        public bool Connected { get; private set; } = false;
+        public string ConnectionError { get; private set; }
+
+        public string Address { get; private set; }
+
+        public int SocksPort { get; private set; }
+
+        public int ControlPort { get; private set; }
+
+        public string TorIP { get; private set; }
+
+        public string CurrentTorIP { get; private set; }
+
         public TorrentService(TorrentServiceOptions options)
         {
             this.Options = options;
+            this.Address = Options.TorProxy.Address;
+            this.SocksPort = Options.TorProxy.SocksPort;
+            this.ControlPort = Options.TorProxy.ControlPort;
         }
 
         public void Dispose()
@@ -55,33 +71,45 @@ namespace Torrentinator.Library.Services
             this.Disconnect();
         }
 
-        public async Task<TorConnectResult> Connect()
+        public TorConnectResult Connect()
         {
             var requestUri = "http://icanhazip.com/";
             try
             {
                 _HttpClient = new HttpClient(new SocksPortHandler(Options.TorProxy.Address, socksPort: Options.TorProxy.SocksPort));
-                var message = await _HttpClient.GetAsync(requestUri);
-                var content = await message.Content.ReadAsStringAsync();
-                Console.WriteLine($"Your Tor IP: \t\t{content}");
+                var message = _HttpClient.GetAsync(requestUri).Result;
+                this.TorIP = message.Content.ReadAsStringAsync().Result;
+                Console.WriteLine($"Your Tor IP: \t\t{this.TorIP}");
 
                 // 3. Change Tor IP
                 var controlPortClient = new DotNetTor.ControlPort.Client(Options.TorProxy.Address, controlPort: Options.TorProxy.ControlPort, password: Options.TorProxy.ControlPassword);
-                await controlPortClient.ChangeCircuitAsync();
+                controlPortClient.ChangeCircuitAsync().Wait();
 
                 // 4. Get changed Tor IP
-                message = await _HttpClient.GetAsync(requestUri);
-                content = await message.Content.ReadAsStringAsync();
-                Console.WriteLine($"Your other Tor IP: \t{content}");
+                message = _HttpClient.GetAsync(requestUri).Result;
+                this.CurrentTorIP = message.Content.ReadAsStringAsync().Result;
+                Console.WriteLine($"Your other Tor IP: \t{this.CurrentTorIP}");
 
-                return new TorConnectResult(content, null);
+                this.Connected = true;
+                this.ConnectionError = string.Empty;
+
+                return new TorConnectResult(this.CurrentTorIP, null);
             }
             catch (Exception ex)
-            {
+            {                
+                this.ConnectionError = ex.Message;
+                if (ex.InnerException != null)
+                    AppendInnerException(ex.InnerException);
                 return new TorConnectResult(string.Empty, ex);
             }
         }
 
+        private void AppendInnerException(Exception ex)
+        {
+            this.ConnectionError += "\r\n\t" + ex.Message;
+            if (ex.InnerException != null)
+                AppendInnerException(ex.InnerException);
+        }
         public void Disconnect()
         {
             if (_HttpClient != null)            

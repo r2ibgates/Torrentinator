@@ -17,9 +17,11 @@ namespace Torrentinator.Library.Infrastructure
 
             configuration.GetSection("DataService").Bind(dataServiceOptions);
             configuration.GetSection("TorrentService").Bind(torrentServiceOptions);
-            
-            services.AddTransient<ITorrentService>(p => new TorrentService(torrentServiceOptions));
-            services.AddSingleton<IDataService>(p => new DataService(dataServiceOptions));
+
+            var ts = new TorrentService(torrentServiceOptions);
+            ts.Connect();
+            services.AddSingleton<ITorrentService>(p => ts);
+            services.AddTransient<IDataService>(p => new DataService(dataServiceOptions));
             services.AddTransient<ITorrentRepository, TorrentRepository>();
 
             return services;

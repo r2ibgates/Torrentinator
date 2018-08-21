@@ -10,7 +10,14 @@ namespace Torrentinator.Library.Services
     public interface ITorrentService
     {
         void Disconnect();
-        Task<TorConnectResult> Connect();
+        bool Connected { get; }
+        string ConnectionError { get; }
+        string Address { get; }
+        int SocksPort { get; }
+        int ControlPort { get; }
+        string TorIP { get; }
+        string CurrentTorIP { get; }
+        TorConnectResult Connect();
         Task<IEnumerable<TorrentRSSItem>> GetTorrentsFromRSS();
         Task<string> GetDescription(string torrentId);
     }

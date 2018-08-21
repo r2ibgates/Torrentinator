@@ -5,15 +5,41 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Torrentinator.Business;
+using Torrentinator.Library.Services;
 using Torrentinator.Models;
 
 namespace Torrentinator.Controllers
 {
     public class HomeController : Controller
     {
+        private ITorrentService TorrentService;
+
+        public HomeController(ITorrentService torrentService)
+        {
+            this.TorrentService = torrentService;
+        }
+
         public IActionResult Index()
         {
-            return View();
+            var model = new HomeViewModel()
+            {
+                Connected = this.TorrentService.Connected,
+                ConnectionError = this.TorrentService.ConnectionError,
+                Address = this.TorrentService.Address,
+                ControlPort = this.TorrentService.ControlPort,
+                SocksPort = this.TorrentService.SocksPort,
+                TorIP = this.TorrentService.TorIP,
+                CurrentTorIP = this.TorrentService.CurrentTorIP
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult Reconnect()
+        {
+            this.TorrentService.Connect();
+            return RedirectToAction("Index");
         }
 
         public IActionResult About()

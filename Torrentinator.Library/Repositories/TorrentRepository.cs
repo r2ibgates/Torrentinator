@@ -31,14 +31,8 @@ namespace Torrentinator.Library.Repositories
                 Published = t.Published,
                 Url = t.Magnet
             }));
-            var tds = new List<Torrent>();
 
-            foreach(var t in newTorrents.Take(10))
-            {
-                t.Description = await TorrentService.GetDescription(t.TorrentId) ?? t.Description;
-                tds.Add(t);
-            }
-            await DataService.AddTorrents(tds);
+            await DataService.AddTorrents(newTorrents);
         }
 
         public async Task DeleteTorrent(string id)
