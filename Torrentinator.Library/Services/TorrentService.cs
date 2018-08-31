@@ -16,6 +16,8 @@ using Torrentinator.Library.RSS;
 using Torrentinator.Library.Types;
 using HtmlAgilityPack;
 using Fizzler.Systems.HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Torrentinator.Library.Services
 {
@@ -41,9 +43,10 @@ namespace Torrentinator.Library.Services
             public string UserAgent { get; set; }
         }
 
+        private ILogger Logger { get; }
         private string URL => "https://www.thepiratebay.org/rss/top100/207"; // Onion version "http://uj3wazyk5u4hnvtk.onion/rss/top100/207";
         private static HttpClient _HttpClient = new HttpClient();
-        private TorrentServiceOptions Options { get; }
+        public TorrentServiceOptions Options { get; private set; }
 
         public bool Connected { get; private set; } = false;
         public string ConnectionError { get; private set; }
@@ -58,14 +61,14 @@ namespace Torrentinator.Library.Services
 
         public string CurrentTorIP { get; private set; }
 
-        public TorrentService(TorrentServiceOptions options)
+        public TorrentService(TorrentServiceOptions options, ILoggerFactory logger)
         {
             this.Options = options;
             this.Address = Options.TorProxy.Address;
             this.SocksPort = Options.TorProxy.SocksPort;
             this.ControlPort = Options.TorProxy.ControlPort;
+            this.Logger = logger.CreateLogger(this.GetType().FullName);
         }
-
         public void Dispose()
         {
             this.Disconnect();
@@ -79,7 +82,7 @@ namespace Torrentinator.Library.Services
                 _HttpClient = new HttpClient(new SocksPortHandler(Options.TorProxy.Address, socksPort: Options.TorProxy.SocksPort));
                 var message = _HttpClient.GetAsync(requestUri).Result;
                 this.TorIP = message.Content.ReadAsStringAsync().Result;
-                Console.WriteLine($"Your Tor IP: \t\t{this.TorIP}");
+                Logger.LogInformation("Your Tor IP: {0}", this.TorIP);
 
                 // 3. Change Tor IP
                 var controlPortClient = new DotNetTor.ControlPort.Client(Options.TorProxy.Address, controlPort: Options.TorProxy.ControlPort, password: Options.TorProxy.ControlPassword);
@@ -87,8 +90,8 @@ namespace Torrentinator.Library.Services
 
                 // 4. Get changed Tor IP
                 message = _HttpClient.GetAsync(requestUri).Result;
-                this.CurrentTorIP = message.Content.ReadAsStringAsync().Result;
-                Console.WriteLine($"Your other Tor IP: \t{this.CurrentTorIP}");
+                this.CurrentTorIP = message.Content.ReadAsStringAsync().Result;                
+                Logger.LogInformation("Your other Tor IP: {0}", this.CurrentTorIP);
 
                 this.Connected = true;
                 this.ConnectionError = string.Empty;

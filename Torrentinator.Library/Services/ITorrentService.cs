@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Torrentinator.Library.RSS;
 using Torrentinator.Library.Types;
+using static Torrentinator.Library.Services.TorrentService;
 
 namespace Torrentinator.Library.Services
 {
