@@ -18,7 +18,7 @@ namespace Torrentinator.Library.Infrastructure
             
             configuration.GetSection("DataService").Bind(dataServiceOptions);
             configuration.GetSection("TorrentService").Bind(torrentServiceOptions);
-
+            
             services.AddSingleton<ITorrentService>(p =>
             {
                 var ts = new TorrentService(torrentServiceOptions, p.GetService<ILoggerFactory>());

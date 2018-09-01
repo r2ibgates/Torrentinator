@@ -81,7 +81,7 @@ namespace Torrentinator.Library.Services
             {
                 _HttpClient = new HttpClient(new SocksPortHandler(Options.TorProxy.Address, socksPort: Options.TorProxy.SocksPort));
                 var message = _HttpClient.GetAsync(requestUri).Result;
-                this.TorIP = message.Content.ReadAsStringAsync().Result;
+                this.TorIP = message.Content.ReadAsStringAsync().Result.Trim('\n').Trim('\r');
                 Logger.LogInformation("Your Tor IP: {0}", this.TorIP);
 
                 // 3. Change Tor IP
@@ -90,7 +90,7 @@ namespace Torrentinator.Library.Services
 
                 // 4. Get changed Tor IP
                 message = _HttpClient.GetAsync(requestUri).Result;
-                this.CurrentTorIP = message.Content.ReadAsStringAsync().Result;                
+                this.CurrentTorIP = message.Content.ReadAsStringAsync().Result.Trim('\n').Trim('\r');
                 Logger.LogInformation("Your other Tor IP: {0}", this.CurrentTorIP);
 
                 this.Connected = true;
@@ -103,6 +103,8 @@ namespace Torrentinator.Library.Services
                 this.ConnectionError = ex.Message;
                 if (ex.InnerException != null)
                     AppendInnerException(ex.InnerException);
+                Logger.LogError(this.ConnectionError, $"Error while connecting to TOR at {this.Address}:{this.SocksPort}");
+
                 return new TorConnectResult(string.Empty, ex);
             }
         }
