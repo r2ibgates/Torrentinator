@@ -25,8 +25,7 @@ namespace Torrentinator.Library.Infrastructure
             if (expression is UnaryExpression)
             {
                 var unary = (UnaryExpression)expression;
-                var right = Recurse(unary.Operand, true);
-                return "{" + NodeTypeToString(unary.NodeType, right == "NULL") + " " + right + "}";
+                return Recurse(unary.Operand, true).Trim();
             }
             if (expression is BinaryExpression)
             {
@@ -145,7 +144,11 @@ namespace Torrentinator.Library.Infrastructure
                 }
                 return (bool)value ? "true" : "false";
             }
-            return (value == null ? "null" : (quote ? $"'{value}'" : $"{value}").Replace("/", "\\/"));
+            else if ((value != null) && (value.GetType().IsEnum))
+            {
+                return ValueToString(Convert.ChangeType(value, value.GetType().GetEnumUnderlyingType()), isUnary, quote);
+            }
+            return (value == null ? "null" : (quote && (value is string) ? $"'{value}'" : $"{value}").Replace("/", "\\/"));
         }
 
         private static bool IsEnumerableType(Type type)
@@ -204,6 +207,8 @@ namespace Torrentinator.Library.Infrastructure
                     return "OR";
                 case ExpressionType.Subtract:
                     return "-";
+                case ExpressionType.Convert:
+                    return "";
             }
             throw new Exception($"Unsupported node type: {nodeType}");
         }

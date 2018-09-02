@@ -1,7 +1,10 @@
-﻿using System;
+﻿using OctoTorrent.BEncoding;
+using OctoTorrent.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Torrentinator.Library.Models;
 using Torrentinator.Library.Services;
@@ -48,6 +51,10 @@ namespace Torrentinator.Library.Repositories
         {
             return await DataService.GetTorrents(null);
         }
+        public async Task<Torrent> GetTorrent(string id)
+        {
+            return await DataService.GetTorrent(id);
+        }
 
         public async Task<Torrent> SetStatus(string id, TorrentStatus status)
         {
@@ -68,6 +75,24 @@ namespace Torrentinator.Library.Repositories
             else
                 torrent.Status = TorrentStatus.Ready;
             return torrent;
+        }
+
+        public async Task<IEnumerable<Torrent>> GetTorrentsForStatus(TorrentStatus status)
+        {
+            return await DataService.GetTorrents(t => t.Status == status);
+        }
+
+        public async Task StartDownload(Torrent torrent)
+        {
+            this.TorrentService.StatisticsUpdated += delegate (object o, Statistics stats)
+            {
+                Console.Clear();
+                foreach(var tstat in stats.Torrents.Values)
+                {
+                    Console.WriteLine($"{tstat.Name} Downloaded {tstat.BytesDownloaded.ToString("#,##0")} at {(tstat.DownloadSpeed / 1024.0).ToString("#,##0.0")}kB/s {(tstat.Progress / 100.0).ToString("P2")}");
+                }
+            };
+            this.TorrentService.StartDownload(torrent);
         }
     }
 }

@@ -11,12 +11,14 @@ using Torrentinator.Library.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Torrentinator.Library.Services;
 using Serilog;
+using System.Threading.Tasks;
+using Torrentinator.Library.Models;
 
 namespace Torrentinator.Service
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             // Create service collection
             var serviceCollection = new ServiceCollection();
@@ -27,9 +29,14 @@ namespace Torrentinator.Service
 
             // Run app
             var torrentSvc = serviceProvider.GetService<ITorrentService>();
+            var torrentRepo = serviceProvider.GetService<ITorrentRepository>();
             var logger = serviceProvider.GetService<ILogger<Program>>();
             logger.LogDebug("Starting application");
-            logger.LogDebug(torrentSvc.Connected.ToString());
+            if (torrentSvc.Connected)
+            {
+                var t = await torrentRepo.GetTorrent("ubuntu18.04.LTS");
+                await torrentRepo.StartDownload(t);
+            }
             logger.LogDebug("All done!");
 
             Console.ReadLine();
