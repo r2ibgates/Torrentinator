@@ -16,6 +16,6 @@ namespace Torrentinator.Library.Repositories
         Task<Torrent> SetDownloadProgress(string id, long progress);
         Task<IEnumerable<Torrent>> GetTorrentsForStatus(TorrentStatus status);
         Task<Torrent> GetTorrent(string id);
-        Task StartDownload(Torrent torrent);
+        Task StartDownload(string id);
     }
 }

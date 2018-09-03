@@ -137,8 +137,7 @@ namespace Torrentinator.Library.Services
                 globalHalfOpenConnections: Options.Client.HalfOpenConnections,
                 globalMaxDownloadSpeed: Options.Client.MaxDownloadSpeed,
                 globalMaxUploadSpeed: Options.Client.MaxUploadSpeed,
-                allowedEncryption: Options.Client.AllowedEncryption,
-                fastResumePath: Path.Combine(Options.Client.Path, "fastresume.data"));
+                allowedEncryption: Options.Client.AllowedEncryption);
             this.TorrentSettings = new TorrentSettings(
                 Options.Client.UploadSlots,
                 Options.Client.MaxConnections,
@@ -165,10 +164,7 @@ namespace Torrentinator.Library.Services
         }
         public void Dispose()
         {
-            if (MonitorThread != null)
-            {
-                MonitorThread.Abort();
-            }
+            this.Shutdown();
             this.Disconnect();
         }
 
@@ -221,7 +217,6 @@ namespace Torrentinator.Library.Services
         }
 
         private CookieContainer cookieContainer = null;
-        static Top10Listener _listener;			// This is a subclass of TraceListener which remembers the last 20 statements sent to it
 
         private HttpWebResponse GetResponse(string url)
         {
@@ -423,6 +418,29 @@ namespace Torrentinator.Library.Services
 
                 Thread.Sleep(500);
             }
+        }
+        private void Shutdown()
+        {
+            var fastResume = new BEncodedDictionary();
+            foreach (var torrentManager in Managers)
+            {
+                torrentManager.Stop();
+                while (torrentManager.State != TorrentState.Stopped)
+                {
+                    Console.WriteLine("{0} is {1}", torrentManager.Torrent.Name, torrentManager.State);
+                    Thread.Sleep(250);
+                }
+
+                fastResume.Add(torrentManager.Torrent.InfoHash.ToHex(), torrentManager.SaveFastResume().Encode());
+            }
+
+//#if !DISABLE_DHT
+//            File.WriteAllBytes(_dhtNodeFile, _engine.DhtEngine.SaveNodes());
+//#endif
+            File.WriteAllBytes(Path.Combine(Options.Client.Path, "fastresume.data"), fastResume.Encode());
+            TorrentClient.Dispose();
+            
+            Thread.Sleep(2000);
         }
     }
 }

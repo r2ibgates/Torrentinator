@@ -27,7 +27,10 @@ namespace Torrentinator.Models
                 Status = torrent.Status,
                 Downloaded = torrent.Downloaded
             };
+            tvm.DownloadProgress.TorrentId = tvm.TorrentId;
             tvm.DownloadProgress.Completed = tvm.Downloaded;
+            tvm.DownloadProgress.Total = tvm.Length;
+
             return tvm;
         }
     }

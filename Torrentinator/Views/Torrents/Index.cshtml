@@ -15,6 +15,11 @@
 </style>
 <h2>Torrents</h2>
 
+<div class="row" style="height:425px;">
+    <div class="col-md-12">
+        <canvas id="graph"></canvas>
+    </div>
+</div>
 <form asp-controller="Torrents" method="post">
     <div class="btn-group" role="group" aria-label="Toolbar">
         <ul>
@@ -49,9 +54,8 @@
                         @Html.DisplayFor(modelItem => item.Published)
                     </td>
                     <td>
-                        @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                        @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
                         <button asp-action="Disable" type="submit" asp-route-id="@item.TorrentId" asp-route-status="@(item.Status == TorrentStatus.Ready ? TorrentStatus.Disabled : TorrentStatus.Ready)">@(item.Status == TorrentStatus.Disabled ? "Enable" : "Disable")</button>
+                        <button asp-action="Download" type="submit" asp-route-id="@item.TorrentId">Download</button>
                     </td>
                 </tr>
                 <tr class="@(item.Status == TorrentStatus.Disabled ? "disabled-torrent" : "")">
@@ -69,10 +73,154 @@
     </table>
 </form>
 
+@section Scripts
+{
 <script type="text/javascript">
+    var configChart = {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Downloads'
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        var label = data.datasets[tooltipItem.datasetIndex].label || '';
+
+                        if (label) {
+                            label += ': ';
+                        }
+                        return label + formatBytes(tooltipItem.yLabel) + '/s';
+                    }
+                }
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '% Complete'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Download Rate'
+                    },
+                    ticks: {
+                        callback: function (value, index, values) {
+                            return formatBytes(value) + '/s';
+                        }
+                    }
+                }]
+            }
+        }
+    };
+
+    var COLORS = [
+        '#4dc9f6',
+        '#f67019',
+        '#f53794',
+        '#537bc4',
+        '#acc236',
+        '#166a8f',
+        '#00a950',
+        '#58595b',
+        '#8549ba'
+    ];
+    function initializeChart() {
+        var ctx = document.getElementById('graph').getContext('2d');
+        ctx.height = 320;
+        window.downloadChart = new Chart(ctx, configChart);
+    }
+    function addChart(torrentId, title) {
+        var color = COLORS[configChart.data.datasets.length];
+
+        configChart.data.datasets.push({
+            id: torrentId,
+            label: title,
+            backgroundColor: color,
+            borderColor: color,
+            fill: false,
+            data: []
+        });
+        window.downloadChart.update();
+    }
+    function updateChart(torrentId, bytesDownloaded, percentComplete, downloadRate) {
+        /*
+        if (configChart.data.labels.length == 10) {
+            configChart.data.labels.shift();
+            configChart.data.datasets[0].data.shift();
+        }
+        */
+        configChart.data.labels.push(formatNumber(percentComplete, 1) + '%');
+        var ds = configChart.data.datasets.filter(d => d.id == torrentId)[0];
+        ds.data.push(downloadRate);
+
+        window.downloadChart.update();
+    }
+    function updateProgressBar(torrentId, bytesDownloaded, totalBytes, percentComplete, downloadRate) {
+        $('div[data-torrent="' + torrentId + '"] div.progress-bar')
+            .css('width', percentComplete + '%')
+            .attr('aria-valuenow', percentComplete)
+            .siblings('small')
+            .text(formatNumber(percentComplete, 1) + '%');
+        $('div[data-torrent="' + torrentId + '"] div:nth-child(2) span')
+            .text(formatBytes(bytesDownloaded) + ' of ' + formatBytes(totalBytes) + ' at ' + formatBytes(downloadRate) + '/s');
+    }
+
     function toggle(id) {
         $('tr[data-description="' + id + '"]').toggle();
         return false;
-
     }
+
+    function formatNumber(value, decimals) {
+        return parseFloat(Math.round(value * (decimals * 10)) / (decimals * 10)).toFixed(decimals).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    function formatBytes(bytes) {
+        if (bytes > Math.pow(2, 30))
+            return formatNumber((bytes / Math.pow(2, 30)), 1) + 'GB';
+        else if (bytes > Math.pow(2, 20))
+            return formatNumber((bytes / Math.pow(2, 20)), 1) + 'MB';
+        else if (bytes > Math.pow(2, 10))
+            return formatNumber((bytes / Math.pow(2, 10)), 1) + 'KB';
+        else
+            return formatNumber(bytes, 1);
+    }
+
+    jQuery(document).ready(function () {
+        initializeChart();
+        addChart('http://thepiratebay.org/torrent/21556627/', 'Black Panther');
+
+        var totalBytes = 1832543190;
+        var currentProgress = 0.0;
+        var downloadRate = 0.0;
+
+        var timer = setInterval(() => {
+            currentProgress += (Math.random() * 8.3);
+            downloadRate = 1024 * (12.3 + (Math.random() * 3487.2));
+            if (currentProgress > 100) {
+                currentProgress = 100;
+                clearInterval(timer);
+            }
+            var downloaded = (totalBytes * (currentProgress / 100.0));
+
+            updateChart('http://thepiratebay.org/torrent/21556627/', downloaded, currentProgress, downloadRate);
+            updateProgressBar('http://thepiratebay.org/torrent/21556627/', downloaded, totalBytes, currentProgress, downloadRate);
+        }, 500);
+    });
 </script>
+}

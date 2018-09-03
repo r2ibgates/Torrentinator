@@ -7,6 +7,7 @@ namespace Torrentinator.Types
 {
     public class Progress
     {
+        public string TorrentId { get; set; }
         public long Total { get; set; }
         public long Completed { get; set; }
         private double Percent

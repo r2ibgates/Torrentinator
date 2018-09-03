@@ -52,5 +52,11 @@ namespace Torrentinator.Controllers
             await this.TorrentRepository.SetStatus(id, status);
             return Redirect("/Torrents");
         }
+        [HttpPost]
+        public async Task<IActionResult> Download(string id)
+        {
+            await this.TorrentRepository.StartDownload(id);
+            return Redirect("/Torrents");
+        }
     }
 }

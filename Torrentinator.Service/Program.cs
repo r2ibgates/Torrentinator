@@ -13,11 +13,14 @@ using Torrentinator.Library.Services;
 using Serilog;
 using System.Threading.Tasks;
 using Torrentinator.Library.Models;
+using System.Threading;
 
 namespace Torrentinator.Service
 {
     class Program
     {
+        static ServiceProvider serviceProvider;
+
         static async Task Main(string[] args)
         {
             // Create service collection
@@ -25,21 +28,21 @@ namespace Torrentinator.Service
             ConfigureServices(serviceCollection);
 
             // Create service provider
-            var serviceProvider = serviceCollection.BuildServiceProvider();
+            serviceProvider = serviceCollection.BuildServiceProvider();
 
             // Run app
             var torrentSvc = serviceProvider.GetService<ITorrentService>();
             var torrentRepo = serviceProvider.GetService<ITorrentRepository>();
             var logger = serviceProvider.GetService<ILogger<Program>>();
             logger.LogDebug("Starting application");
+            Console.CancelKeyPress += delegate { Shutdown(); };
+            AppDomain.CurrentDomain.ProcessExit += delegate { Shutdown(); };
+            AppDomain.CurrentDomain.UnhandledException += delegate (object sender, UnhandledExceptionEventArgs e) { Console.WriteLine(e.ExceptionObject); Shutdown(); };
+            Thread.GetDomain().UnhandledException += delegate (object sender, UnhandledExceptionEventArgs e) { Console.WriteLine(e.ExceptionObject); Shutdown(); };
             if (torrentSvc.Connected)
-            {
-                var t = await torrentRepo.GetTorrent("ubuntu18.04.LTS");
-                await torrentRepo.StartDownload(t);
-            }
+                await torrentRepo.StartDownload("ubuntu18.04.LTS");
+            
             logger.LogDebug("All done!");
-
-            Console.ReadLine();
         }
 
         private static void ConfigureServices(IServiceCollection serviceCollection)
@@ -71,6 +74,12 @@ namespace Torrentinator.Service
 
             // Add services
             serviceCollection.AddTorrentServices(configuration);
+        }
+
+        private static void Shutdown()
+        {
+            var torrentSvc = serviceProvider.GetService<ITorrentService>();
+            torrentSvc.Dispose();
         }
     }
 }

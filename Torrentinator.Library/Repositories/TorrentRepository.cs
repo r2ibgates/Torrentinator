@@ -82,8 +82,9 @@ namespace Torrentinator.Library.Repositories
             return await DataService.GetTorrents(t => t.Status == status);
         }
 
-        public async Task StartDownload(Torrent torrent)
+        public async Task StartDownload(string torrentId)
         {
+            var torrent = await this.GetTorrent(torrentId);
             this.TorrentService.StatisticsUpdated += delegate (object o, Statistics stats)
             {
                 Console.Clear();

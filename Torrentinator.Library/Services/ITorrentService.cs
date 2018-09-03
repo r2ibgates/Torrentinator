@@ -9,7 +9,7 @@ using static Torrentinator.Library.Services.TorrentService;
 
 namespace Torrentinator.Library.Services
 {
-    public interface ITorrentService
+    public interface ITorrentService : IDisposable
     {
         event EventHandler<TorrentHash> PieceHashed;
         event EventHandler<Statistics> StatisticsUpdated;
